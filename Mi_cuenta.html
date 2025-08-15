@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Mi Cuenta</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background: #0f172a;
+    color: white;
+    margin: 0;
+    padding: 0;
+}
+.container {
+    max-width: 500px;
+    margin: 50px auto;
+    background: #1e293b;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+}
+h1 {
+    color: #38bdf8;
+}
+.info {
+    text-align: left;
+    margin: 20px 0;
+    font-size: 16px;
+}
+.info p {
+    margin: 5px 0;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+th, td {
+    padding: 8px;
+    text-align: center;
+    border-bottom: 1px solid #334155;
+}
+th {
+    background: #0ea5e9;
+    color: #0f172a;
+}
+tr:hover {
+    background: rgba(56, 189, 248, 0.1);
+}
+button {
+    margin-top: 20px;
+    padding: 10px 15px;
+    border: none;
+    background: #38bdf8;
+    color: #0f172a;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 8px;
+}
+button:hover {
+    background: #0ea5e9;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h1>👤 Mi Cuenta</h1>
+    <div class="info">
+        <p><b>Correo:</b> <span id="correo"></span></p>
+        <p><b>Año de creación:</b> <span id="anio"></span></p>
+        <p><b>Fecha de creación:</b> <span id="fechaCreacion"></span></p>
+        <p><b>Saldo actual:</b> $<span id="saldo"></span></p>
+    </div>
+
+    <h2>Historial de Recargas</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Monto</th>
+            </tr>
+        </thead>
+        <tbody id="tablaHistorial">
+            <tr><td colspan="2">Sin recargas registradas</td></tr>
+        </tbody>
+    </table>
+
+    <button onclick="window.location.href='index.html'">Cerrar Sesión</button>
+</div>
+
+<script>
+let currentUserEmail = localStorage.getItem("currentUser");
+let users = JSON.parse(localStorage.getItem("users")) || [];
+let userData = users.find(u => u.user === currentUserEmail);
+
+// Si no está logueado, redirigir
+if (!currentUserEmail || !userData) {
+    window.location.href = "index.html";
+}
+
+// Mostrar datos
+document.getElementById("correo").innerText = userData.user;
+let fecha = new Date(userData.fechaCreacion);
+document.getElementById("anio").innerText = fecha.getFullYear();
+document.getElementById("fechaCreacion").innerText = fecha.toLocaleString();
+document.getElementById("saldo").innerText = userData.saldo || 0;
+
+// Mostrar historial
+let tabla = document.getElementById("tablaHistorial");
+if (userData.historial && userData.historial.length > 0) {
+    tabla.innerHTML = "";
+    userData.historial.forEach(item => {
+        let tr = document.createElement("tr");
+        let fechaItem = new Date(item.fecha);
+        tr.innerHTML = `<td>${fechaItem.toLocaleString()}</td><td>$${item.monto}</td>`;
+        tabla.appendChild(tr);
+    });
+}
+</script>
+
+</body>
+</html>

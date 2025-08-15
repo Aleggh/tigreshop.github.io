@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Panel de Recargas - Admin</title>
+<style>
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    min-height: 100vh;
+    background: #0f172a;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 50px;
+}
+#adminPanel {
+    background: #1e293b;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+    width: 500px;
+    text-align: center;
+}
+#adminPanel h1 {
+    color: #38bdf8;
+    margin-bottom: 20px;
+    font-size: 26px;
+}
+input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    border: none;
+    outline: none;
+    background: #0f172a;
+    color: white;
+}
+input::placeholder {
+    color: #94a3b8;
+}
+button {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 8px;
+    background-color: #38bdf8;
+    color: #0f172a;
+    font-weight: bold;
+    cursor: pointer;
+}
+button:hover {
+    background-color: #0ea5e9;
+}
+#stats {
+    margin-top: 20px;
+    font-size: 16px;
+    background: #0f172a;
+    padding: 15px;
+    border-radius: 10px;
+}
+#stats p {
+    margin: 8px 0;
+    color: #e2e8f0;
+}
+#usersList {
+    margin-top: 20px;
+    background: #0f172a;
+    padding: 15px;
+    border-radius: 10px;
+    text-align: left;
+}
+.userItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid #1e293b;
+}
+.userItem span {
+    color: #e2e8f0;
+}
+.userItem button {
+    padding: 5px 10px;
+    font-size: 12px;
+    border-radius: 5px;
+}
+</style>
+</head>
+<body>
+
+<div id="adminPanel">
+    <h1>💳 Panel de Recargas</h1>
+    <p>Bienvenido, administrador</p>
+
+    <input type="text" id="usuarioRecarga" placeholder="Correo del cliente">
+    <input type="number" id="montoRecarga" placeholder="Monto a recargar">
+    <button onclick="recargar()">Recargar</button>
+
+    <div id="stats">
+        <p id="totalUsuarios">Usuarios registrados: 0</p>
+        <p id="totalVentas">Ventas realizadas: 0</p>
+    </div>
+
+    <div id="usersList">
+        <h3>👥 Lista de usuarios</h3>
+        <div id="usuariosContainer"></div>
+    </div>
+
+    <br>
+    <button onclick="logout()">Cerrar sesión</button>
+</div>
+
+<script>
+// Validar que quien entra es el admin
+if (localStorage.getItem("currentUser") !== "alecasango21@gmail.com") {
+    window.location.href = "index.html";
+}
+
+function actualizarStats(){
+    let users = JSON.parse(localStorage.getItem("users")) || [];
+    let ventas = JSON.parse(localStorage.getItem("ventas")) || [];
+
+    document.getElementById("totalUsuarios").textContent = "Usuarios registrados: " + users.length;
+    document.getElementById("totalVentas").textContent = "Ventas realizadas: " + ventas.length;
+
+    mostrarUsuarios();
+}
+
+function mostrarUsuarios(){
+    let users = JSON.parse(localStorage.getItem("users")) || [];
+    let container = document.getElementById("usuariosContainer");
+    container.innerHTML = "";
+
+    users.forEach((u, index) => {
+        let div = document.createElement("div");
+        div.classList.add("userItem");
+        div.innerHTML = `
+            <span>${u.user} — Saldo: $${u.saldo || 0}</span>
+            <button onclick="eliminarUsuario(${index})">Eliminar</button>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function eliminarUsuario(index){
+    let users = JSON.parse(localStorage.getItem("users")) || [];
+    if(confirm(`¿Seguro que deseas eliminar a ${users[index].user}?`)){
+        users.splice(index, 1);
+        localStorage.setItem("users", JSON.stringify(users));
+        actualizarStats();
+    }
+}
+
+function recargar(){
+    let correo = document.getElementById("usuarioRecarga").value.trim();
+    let monto = parseFloat(document.getElementById("montoRecarga").value);
+
+    if(!correo || isNaN(monto) || monto <= 0){
+        alert("Datos inválidos");
+        return;
+    }
+
+    let users = JSON.parse(localStorage.getItem("users")) || [];
+    let userIndex = users.findIndex(u => u.user === correo);
+
+    if (userIndex === -1) {
+        alert("Usuario no encontrado");
+        return;
+    }
+
+    if (!users[userIndex].saldo) {
+        users[userIndex].saldo = 0;
+    }
+
+    users[userIndex].saldo += monto;
+    localStorage.setItem("users", JSON.stringify(users));
+
+    let ventas = JSON.parse(localStorage.getItem("ventas")) || [];
+    ventas.push({
+        cliente: correo,
+        monto: monto,
+        fecha: new Date().toLocaleString()
+    });
+    localStorage.setItem("ventas", JSON.stringify(ventas));
+
+    alert(`Se recargó $${monto} al usuario ${correo}. Nuevo saldo: $${users[userIndex].saldo}`);
+
+    actualizarStats();
+}
+
+function logout(){
+    localStorage.setItem("loggedIn", "false");
+    localStorage.removeItem("currentUser");
+    window.location.href = "index.html";
+}
+
+actualizarStats();
+</script>
+
+</body>
+</html>
